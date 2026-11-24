@@ -1,4 +1,4 @@
-const SHELL = 'funambola-shell-v2';
+const SHELL = 'funambola-shell-v3';
 const root = new URL('./', self.location.href).href;
 
 self.addEventListener('install', event => {
@@ -8,10 +8,11 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.delete('funambola-shell-v1').then(() => self.clients.claim()));
+  event.waitUntil(Promise.all(['funambola-shell-v1', 'funambola-shell-v2'].map(key => caches.delete(key)))
+    .then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', event => {
   if (event.request.mode !== 'navigate' || !event.request.url.startsWith(root)) return;
-  event.respondWith(fetch(event.request).catch(async () => (await caches.match(root)) || Response.error()));
+  event.respondWith(fetch(event.request, {cache: 'no-cache'}).catch(async () => (await caches.match(root)) || Response.error()));
 });
