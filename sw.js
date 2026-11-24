@@ -1,1 +1,17 @@
-const CACHE='funambola-shell-v1';self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/','/icon-192.png','/icon-512.png','/manifest.webmanifest'])));self.skipWaiting()});self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim())});self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==self.location.origin)return;if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).catch(()=>caches.match('/')))}});
+const SHELL = 'funambola-shell-v2';
+const root = new URL('./', self.location.href).href;
+
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(SHELL)
+    .then(cache => cache.addAll([root, './icon-192.png', './icon-512.png', './manifest.webmanifest']))
+    .then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.delete('funambola-shell-v1').then(() => self.clients.claim()));
+});
+
+self.addEventListener('fetch', event => {
+  if (event.request.mode !== 'navigate' || !event.request.url.startsWith(root)) return;
+  event.respondWith(fetch(event.request).catch(async () => (await caches.match(root)) || Response.error()));
+});
